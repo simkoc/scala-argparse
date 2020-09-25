@@ -1,0 +1,7 @@
+Object Main {
+
+       def run(argv : List[String]) : Unit = {
+           println("test");
+       }
+
+}
