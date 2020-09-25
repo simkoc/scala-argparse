@@ -1,3 +1,3 @@
-# protection-circumvention
+# scala argparse
 
-Program to detect protections based on dynamic execution traces and validate using CPGs whether no other path in the program might allow for significant/relevant coverage of the presumably protected code.
+A python argparse inspired library to parse command line arguments
