@@ -88,23 +88,5 @@ class CommandLineParserTest extends WordSpec with Matchers {
       parser.get[Positional]("pos1").value shouldBe "value"
       parser.get[Parser]("next").get[Positional]("pos2").value shouldBe "otherValue"
     }
-    "print a proper help message" in {
-      val parser = Parser("test","test")
-        .addPositional("pos1", "description")
-        .addOptional("opt1","o", description = "stuff and stuff")
-        .addFlag("flag1","f", description = "other stuff")
-        .addSubparser{
-          Parser("other","other").addPositional("pos3")
-        }
-      parser.help() shouldBe
-        """usage: test [pos1] {o,f} other
-
-test
-
-[pos1] description
--o <value> stuff and stuff
--f other stuff
-other other"""
-    }
   }
 }
