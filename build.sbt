@@ -2,12 +2,11 @@ name :=  "scala argparse"
 scalaVersion := "2.13.3"
 organization := "de.halcony"
 version := "1.0.0"
+licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
 enablePlugins(JavaAppPackaging)
-githubOwner := "simkoc"
-githubRepository := "scala-argparse"
-githubTokenSource := TokenSource.GitConfig("github.scalaReleaseToken")
 
+bintrayRepository := "scala-argparse"
 
 libraryDependencies ++= Seq(
   "org.scalatest"   %% "scalatest" % "3.0.8" % Test
