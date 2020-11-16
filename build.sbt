@@ -6,8 +6,6 @@ licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0
 
 enablePlugins(JavaAppPackaging)
 
-bintrayRepository := "scala-argparse"
-
 libraryDependencies ++= Seq(
   "org.scalatest"   %% "scalatest" % "3.0.8" % Test
 )
