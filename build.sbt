@@ -1,7 +1,7 @@
 name :=  "scala argparse"
 scalaVersion in ThisBuild := "2.13.3"
 organization := "de.halcony"
-version := "1.0-SNAPSHOT"
+version := "1.0.0"
 
 //enablePlugins(GitVersioning)
 
