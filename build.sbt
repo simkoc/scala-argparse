@@ -1,9 +1,13 @@
 name :=  "scala argparse"
-scalaVersion in ThisBuild := "2.13.3"
+scalaVersion := "2.13.3"
 organization := "de.halcony"
 version := "1.0.0"
 
-//enablePlugins(GitVersioning)
+enablePlugins(JavaAppPackaging)
+githubOwner := "simkoc"
+githubRepository := "scala-argparse"
+githubTokenSource := TokenSource.GitConfig("github.scalaReleaseToken")
+
 
 libraryDependencies ++= Seq(
   "org.scalatest"   %% "scalatest" % "3.0.8" % Test
@@ -61,4 +65,3 @@ testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 checkstyleConfigLocation := CheckstyleConfigLocation.File("config/checkstyle/google_checks.xml")
 checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Info)
 
-enablePlugins(JavaAppPackaging)
