@@ -1,5 +1,3 @@
 package de.halcony.argparse
 
-class HelpException extends Exception {
-
-}
+class HelpException extends Exception {}
