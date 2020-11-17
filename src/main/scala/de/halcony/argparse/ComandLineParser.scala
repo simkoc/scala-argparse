@@ -8,18 +8,27 @@ abstract class CommandLineParser(val name : String,val description : String) {
 
   private[argparse] var parsed : Boolean = false
 
-  def parse(args : List[String]) : List[String]
+  private[argparse] def parse(args : List[String])(implicit result : ParsingResult) : List[String]
 
   def help() : String
 
 }
 
+case class Default[T](override val name : String, value : T, override val description : String = "") extends CommandLineParser(name, description) {
+
+  override def parse(args: List[String])(implicit result : ParsingResult): List[String] = throw new RuntimeException("there is no parsing for default arguments")
+
+  override def help(): String = throw new RuntimeException("there is no help for default arguments")
+
+}
+
 case class Positional(override val name : String, override val description : String = "") extends CommandLineParser(name, description) {
 
-  var value : String = ""
+  //var value : String = ""
 
-  override def parse(args: List[String]): List[String] = {
-    value = args.head
+  private[argparse] override def parse(args: List[String])(implicit result : ParsingResult): List[String] = {
+    //value = args.head
+    result.addResult(name, args.head)
     parsed = true
     args.tail
   }
@@ -31,13 +40,14 @@ case class Positional(override val name : String, override val description : Str
 
 case class Optional(override val name : String, short : String, long : String = "", default : Option[String] = None, override val description : String = "") extends CommandLineParser(name, description) {
 
-  var value : Option[String] = default
+  //var value : String = default
 
-  override def parse(args: List[String]): List[String] = {
+  private[argparse] override def parse(args: List[String])(implicit result : ParsingResult): List[String] = {
     var ret = args
     if(s"-$short" == args.head) {
       ret = args.tail
-      value = Some(ret.head)
+      //value = Some(ret.head)
+      result.addResult(name, Some(ret.head))
       ret =  ret.tail
       parsed = true
     } else {
@@ -45,7 +55,8 @@ case class Optional(override val name : String, short : String, long : String = 
         case "" =>
         case x => if (s"--$x" == args.head) {
           ret = args.tail
-          value = Some(ret.head)
+          //value = Some(ret.head)
+          result.addResult(name, Some(ret.head))
           ret = ret.tail
           parsed = true
         }
@@ -69,19 +80,19 @@ case class Optional(override val name : String, short : String, long : String = 
 
 case class Flag(override val name : String, short : String, long : String = "", override val description : String = "") extends CommandLineParser(name, description) {
 
-  var value : Boolean = false
+  //var value : Boolean = false
 
-  override def parse(args: List[String]): List[String] = {
+  private[argparse] override def parse(args: List[String])(implicit result : ParsingResult): List[String] = {
     var ret = args
     if(s"-$short" == args.head) {
-      value = true
+      result.addResult(name, true)
       parsed = true
       ret =  ret.tail
     } else {
       long match {
         case "" =>
         case x => if (s"--$x" == args.head) {
-          value = true
+          result.addResult(name, true)
           parsed = true
           ret = ret.tail
         }
@@ -99,11 +110,41 @@ case class Flag(override val name : String, short : String, long : String = "", 
   }
 }
 
+class ParsingResult() {
+
+  private sealed trait Result
+
+  private sealed case class ResultValue[T](value : T) extends Result
+
+  private val results : collection.mutable.Map[String, Result] = collection.mutable.Map()
+
+  private[argparse] def addResult[T](name : String, value : T) : Unit = {
+    val res = ResultValue[T](value)
+    results.addOne((name, res))
+  }
+
+  def get[T](name : String) : T = {
+    results.get(name) match {
+      case Some(x : ResultValue[T]) => x.value
+    }
+  }
+
+  def getOrElse[T](name : String, otherwise : () => T) : T = {
+    results.getOrElse(name, otherwise) match {
+      case x : ResultValue[T] => x.value
+    }
+  }
+
+}
+
 case class Parser(override val name : String, override val description : String = "") extends CommandLineParser(name, description) {
 
   private val positionals : collection.mutable.ListBuffer[CommandLineParser] = new ListBuffer[CommandLineParser]
   private val optionals : collection.mutable.ListBuffer[CommandLineParser] = new ListBuffer[CommandLineParser]
+  private val flags : collection.mutable.ListBuffer[CommandLineParser] = new ListBuffer[CommandLineParser]
   private val subparsers : collection.mutable.ListBuffer[CommandLineParser] = new ListBuffer[CommandLineParser]
+  private val defaults : collection.mutable.ListBuffer[CommandLineParser] = new ListBuffer[CommandLineParser]
+
   private[argparse] var parentParsers : List[CommandLineParser] = Nil
 
   def addPositional(name : String, description : String = "") : Parser = {
@@ -117,13 +158,18 @@ case class Parser(override val name : String, override val description : String 
   }
 
   def addFlag(name : String, short : String, long : String = "", description : String = "") : Parser = {
-    optionals.append(Flag(name, short, long, description))
+    flags.append(Flag(name, short, long, description))
     this
   }
 
   def addSubparser(parser : Parser) : Parser = {
     parser.parentParsers = this :: parentParsers
     subparsers.append(parser)
+    this
+  }
+
+  def addDefault[T](name : String, value : T, description : String = "") : Parser = {
+    defaults.append(Default[T](name, value, description))
     this
   }
 
@@ -136,24 +182,7 @@ case class Parser(override val name : String, override val description : String 
     }
   }
 
-  def get[T](name : String) : T = {
-    var ret : Option[T] = None
-    breakable {
-      for(clp <- positionals ++ optionals ++ subparsers) {
-        if(clp.name == name) {
-          clp match {
-            case x : T =>
-              ret = Some(x)
-              break
-            case _ =>
-          }
-        }
-      }
-    }
-    ret.getOrElse(throw new RuntimeException(s"there is no parser of name $name"))
-  }
-
-  private def parsePositionals(args: List[String]): List[String] = {
+  private def parsePositionals(args: List[String])(implicit result : ParsingResult = new ParsingResult()): List[String] = {
     var sargs = args
     for(positional <- positionals) {
       if(sargs.isEmpty) {
@@ -164,9 +193,9 @@ case class Parser(override val name : String, override val description : String 
     sargs
   }
 
-  private def parseOptionals(args: List[String]): List[String] = {
+  private def parseOptionals(args: List[String])(implicit result : ParsingResult = new ParsingResult()): List[String] = {
     var sargs = args
-    for(optional <- optionals) {
+    for(optional <- optionals ++ flags) {
       if(sargs.nonEmpty && !optional.parsed) {
         sargs = optional.parse(sargs)
       }
@@ -174,7 +203,7 @@ case class Parser(override val name : String, override val description : String 
     sargs
   }
 
-  private def parseSubparser(args: List[String]) : List[String] = {
+  private def parseSubparser(args: List[String])(implicit result : ParsingResult = new ParsingResult()) : List[String] = {
     breakable {
       if(subparsers.nonEmpty) {
         for (subparser <- subparsers) {
@@ -184,7 +213,7 @@ case class Parser(override val name : String, override val description : String 
           if (subparser.name == args.head) {
             val remain = subparser.parse(args)
             if (remain.nonEmpty) {
-              throw new ParsingException(s"there is junk at the end of the arguments ${remain}")
+              throw new ParsingException(s"there is junk at the end of the arguments $remain")
             }
             break()
           }
@@ -195,10 +224,13 @@ case class Parser(override val name : String, override val description : String 
     Nil
   }
 
-  override def parse(args: List[String]): List[String] = {
+  override def parse(args: List[String])(implicit result : ParsingResult = new ParsingResult()): List[String] = {
     try {
       assert((args.nonEmpty && args.head == this.name) || parentParsers.isEmpty)
       parsed = true
+      defaults.foreach(default => result.addResult(default.name, default.asInstanceOf[Default[AnyRef]].value))
+      optionals.foreach(optional => result.addResult(optional.name, optional.asInstanceOf[Optional].default))
+      flags.foreach(flag => result.addResult(flag.name, false))
       parseSubparser(parseOptionals(parsePositionals(if(parentParsers.isEmpty) args else args.tail)))
     } catch {
       case x : IntermediateParsingException =>
@@ -208,6 +240,15 @@ case class Parser(override val name : String, override val description : String 
         println(this.help())
         throw new ParsingException("The help flag was encountered")
     }
+  }
+
+  def parseArgv(argv : List[String]) : ParsingResult = {
+    implicit val parsingResult: ParsingResult = new ParsingResult()
+    parse(argv) match {
+      case Nil =>
+      case remains => throw new ParsingException(s"The input $argv was not completely parsed and $remains remains")
+    }
+    parsingResult
   }
 
   override def help(): String = {
