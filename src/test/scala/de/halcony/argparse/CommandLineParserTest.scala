@@ -6,14 +6,16 @@ class CommandLineParserTest extends WordSpec with Matchers {
 
   "Positional" should {
     "be able to parse a single element" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val pos = Positional("test","this is a description")
       pos.parse(List("test")).length shouldBe 0
-      pos.value shouldBe "test"
+      result.get[String]("test") shouldBe "test"
     }
     "be able to parse a single element out of multiple" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val pos = Positional("test","this is a description")
       pos.parse(List("test", "test")).length shouldBe 1
-      pos.value shouldBe "test"
+      result.get[String]("test") shouldBe "test"
     }
     "generate the proper help message" in {
       val pos = Positional("test","this is a description")
@@ -23,40 +25,58 @@ class CommandLineParserTest extends WordSpec with Matchers {
 
   "Optional" should {
     "be able to parse a single element short" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val opt = Optional("test","t",default = Some("other"),description = "description")
       opt.parse(List("-t", "test")).length shouldBe 0
-      opt.value shouldBe Some("test")
+      result.get[Option[String]]("test") shouldBe Some("test")
     }
     "be able to parse a single element short out of multiple" in {
-      val opt = Optional("test","t","long",None,"description")
+      implicit val result: ParsingResult = new ParsingResult()
+      val opt = Optional("test","t","long", Some("default"),"description")
       opt.parse(List("-t", "test", "-n", "next")).length shouldBe 2
-      opt.value shouldBe Some("test")
+      result.get[Option[String]]("test") shouldBe Some("test")
     }
     "be able to parse a single element long" in {
-      val opt = Optional("test","t","long",None,"description")
+      implicit val result: ParsingResult = new ParsingResult()
+      val opt = Optional("test","t","long",Some("default"),"description")
       opt.parse(List("--long", "test")).length shouldBe 0
-      opt.value shouldBe Some("test")
+      result.get[Option[String]]("test") shouldBe Some("test")
     }
     "be able to parse a single element long out of multiple" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val opt = Optional("test","t","long",None,"description")
       opt.parse(List("--long", "test", "-n", "next")).length shouldBe 2
-      opt.value shouldBe Some("test")
+      result.get[Option[String]]("test") shouldBe Some("test")
     }
     "be able to generate help message with just short" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val opt = Optional("test","t",default = Some("other"),description = "description")
       opt.help() shouldBe "-t <value> description (def:other)"
     }
     "be able to generate help message with short and long" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val opt = Optional("test","t","test", default = Some("other"),description = "description")
       opt.help() shouldBe "-t/--test <value> description (def:other)"
     }
   }
 
+  "default" should {
+    "be able to store default integer value" in {
+      val default = Default("test",42,"default")
+      default.value.asInstanceOf[Integer] shouldBe 42
+    }
+    "be abel to store a function" in {
+      val default = Default("func",(x:Int) => x * x, "test function")
+      default.value.apply(4) shouldBe 16
+    }
+  }
+
   "Flag" should {
     "be able to parse a single element" in {
+      implicit val result: ParsingResult = new ParsingResult()
       val flag = Flag("test","t",description = "description")
       flag.parse(List("-t", "test")).length shouldBe 1
-      flag.value shouldBe true
+      result.get[Boolean]("test") shouldBe true
     }
     "be able to generate a help message" in {
       val flag = Flag("test","t","test","description")
@@ -70,10 +90,10 @@ class CommandLineParserTest extends WordSpec with Matchers {
         .addPositional("pos1")
         .addOptional("opt1","o")
         .addFlag("flag1","f")
-      parser.parse(List("value","-o","optional","-f")).length shouldBe 0
-      parser.get[Positional]("pos1").value shouldBe "value"
-      parser.get[Optional]("opt1").value.get shouldBe "optional"
-      parser.get[Flag]("flag1").value shouldBe true
+      val result = parser.parseArgv(List("value","-o","optional","-f"))
+      result.get[String]("pos1") shouldBe "value"
+      result.get[Option[String]]("opt1") shouldBe Some("optional")
+      result.get[Boolean]("flag1") shouldBe true
     }
     "be able to handle single subparser" in {
       val parser = Parser("test","test")
@@ -84,9 +104,37 @@ class CommandLineParserTest extends WordSpec with Matchers {
         .addSubparser{
           Parser("other","other").addPositional("pos3")
         }
-      parser.parse(List("value","next","otherValue")).length shouldBe 0
-      parser.get[Positional]("pos1").value shouldBe "value"
-      parser.get[Parser]("next").get[Positional]("pos2").value shouldBe "otherValue"
+      val result = parser.parseArgv(List("value","next","otherValue"))
+      result.get[String]("pos1") shouldBe "value"
+      result.get[String]("pos2") shouldBe "otherValue"
+    }
+    "be able to work with default values" in {
+      val parser = Parser("test","test")
+        .addDefault[Int => Int]("func",(x:Int) => x * x, "default function")
+      val result = parser.parseArgv(List(""))
+      result.get[Int => Int]("func").apply(4) shouldBe 16
+    }
+    "be able to work with default values in subparser" in {
+      val parser = Parser("test","test")
+        .addSubparser(Parser("square","square")
+          .addDefault[Int => Int]("func",(x:Int) => x * x, "default function")
+        )
+        .addSubparser(Parser("add","add")
+          .addDefault[Int => Int]("func",(x:Int) => x + x, "default function")
+        )
+      val result = parser.parseArgv(List("square"))
+      result.get[Int => Int]("func").apply(4) shouldBe 16
+    }
+    "be able to work with default values in subparser for either" in {
+      val parser = Parser("test","test")
+        .addSubparser(Parser("square","square")
+          .addDefault[Int => Int]("func",(x:Int) => x * x, "default function")
+        )
+        .addSubparser(Parser("add","add")
+          .addDefault[Int => Int]("func",(x:Int) => x + x, "default function")
+        )
+      val result = parser.parseArgv(List("add"))
+      result.get[Int => Int]("func").apply(4) shouldBe 8
     }
   }
 }
