@@ -1,7 +1,7 @@
 name :=  "scala argparse"
 scalaVersion := "2.13.3"
 organization := "de.halcony"
-version := "1.0.0"
+version := "1.1.0"
 licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
 enablePlugins(JavaAppPackaging)
