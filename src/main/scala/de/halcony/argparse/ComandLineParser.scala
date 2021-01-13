@@ -155,7 +155,8 @@ class ParsingResult() {
   def get[T](name: String): T = {
     results.get(name) match {
       case Some(x: ResultValue[T]) => x.value
-      case None => throw new RuntimeException(s"expected argument $name but none found")
+      case None =>
+        throw new RuntimeException(s"expected argument $name but none found")
     }
   }
 
@@ -166,9 +167,17 @@ class ParsingResult() {
   }
 
   override def toString: String = {
-    results.iterator.map {
-      pair => s"${pair._1} -> ${pair._2.toString}"
-    }.mkString("\n")
+    results.iterator
+      .map { pair =>
+        s"${pair._1} -> ${pair._2.toString}"
+      }
+      .mkString("\n")
+  }
+
+  def toMap: Map[String, AnyVal] = {
+    results.map { pair =>
+      pair._1 -> pair._2.asInstanceOf[ResultValue[AnyVal]].value
+    }.toMap
   }
 
 }
@@ -235,7 +244,8 @@ case class Parser(override val name: String,
   }
 
   private def parsePositionals(args: List[String])(
-      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
+      implicit result: ParsingResult /* = new ParsingResult()*/ )
+    : List[String] = {
     var sargs = args
     for (positional <- positionals) {
       if (sargs.isEmpty) {
@@ -248,7 +258,8 @@ case class Parser(override val name: String,
   }
 
   private def parseOptionals(args: List[String])(
-      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
+      implicit result: ParsingResult /* = new ParsingResult()*/ )
+    : List[String] = {
     var sargs = args
     for (optional <- optionals ++ flags) {
       if (sargs.nonEmpty && !optional.parsed) {
@@ -259,7 +270,8 @@ case class Parser(override val name: String,
   }
 
   private def parseSubparser(args: List[String])(
-      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
+      implicit result: ParsingResult /* = new ParsingResult()*/ )
+    : List[String] = {
     breakable {
       if (subparsers.nonEmpty) {
         for (subparser <- subparsers) {
@@ -337,26 +349,28 @@ case class Parser(override val name: String,
       .filter(_.isInstanceOf[Optional])
       .map(x => s"-${x.asInstanceOf[Optional].short}")
       .mkString(",")
-    if(optionals.exists(_.isInstanceOf[Optional])) {
+    if (optionals.exists(_.isInstanceOf[Optional])) {
       msg ++= ","
     }
     msg ++= flags
       .filter(_.isInstanceOf[Flag])
       .map(x => s"-${x.asInstanceOf[Flag].short}")
       .mkString(",")
-    if(flags.exists(_.isInstanceOf[Flag])) {
+    if (flags.exists(_.isInstanceOf[Flag])) {
       msg ++= ","
     }
     msg ++= "-h"
     msg ++= "}"
-    if(subparsers.nonEmpty) {
+    if (subparsers.nonEmpty) {
       msg ++= " "
     }
     msg ++= subparsers.map(_.name).mkString(" ")
     msg ++= "\n\n"
     msg ++= description + "\n\n"
-    msg ++= (positionals ++ optionals ++ flags).map(x => s"          ${x.help()}").mkString("\n\n")
-    if( (positionals ++ optionals ++ flags).nonEmpty) {
+    msg ++= (positionals ++ optionals ++ flags)
+      .map(x => s"          ${x.help()}")
+      .mkString("\n\n")
+    if ((positionals ++ optionals ++ flags).nonEmpty) {
       msg ++= "\n\n"
     }
     msg ++= "          -h/--help prints this help message"
@@ -364,7 +378,7 @@ case class Parser(override val name: String,
     msg ++= subparsers
       .map(sp => s"          ${sp.name} ${sp.description}")
       .mkString("\n\n")
-    if(subparsers.nonEmpty) {
+    if (subparsers.nonEmpty) {
       msg ++= "\n\n"
     }
     msg ++= "\n"
