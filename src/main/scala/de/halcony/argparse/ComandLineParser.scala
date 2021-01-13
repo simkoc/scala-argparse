@@ -136,7 +136,13 @@ class ParsingResult() {
 
   private sealed trait Result
 
-  private sealed case class ResultValue[T](value: T) extends Result
+  private sealed case class ResultValue[T](value: T) extends Result {
+
+    override def toString: String = {
+      s"$value"
+    }
+
+  }
 
   private val results: collection.mutable.Map[String, Result] =
     collection.mutable.Map()
@@ -149,6 +155,7 @@ class ParsingResult() {
   def get[T](name: String): T = {
     results.get(name) match {
       case Some(x: ResultValue[T]) => x.value
+      case None => throw new RuntimeException(s"expected argument $name but none found")
     }
   }
 
@@ -156,6 +163,12 @@ class ParsingResult() {
     results.getOrElse(name, otherwise) match {
       case x: ResultValue[T] => x.value
     }
+  }
+
+  override def toString: String = {
+    results.iterator.map {
+      pair => s"${pair._1} -> ${pair._2.toString}"
+    }.mkString("\n")
   }
 
 }
@@ -222,7 +235,7 @@ case class Parser(override val name: String,
   }
 
   private def parsePositionals(args: List[String])(
-      implicit result: ParsingResult = new ParsingResult()): List[String] = {
+      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
     var sargs = args
     for (positional <- positionals) {
       if (sargs.isEmpty) {
@@ -235,7 +248,7 @@ case class Parser(override val name: String,
   }
 
   private def parseOptionals(args: List[String])(
-      implicit result: ParsingResult = new ParsingResult()): List[String] = {
+      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
     var sargs = args
     for (optional <- optionals ++ flags) {
       if (sargs.nonEmpty && !optional.parsed) {
@@ -246,7 +259,7 @@ case class Parser(override val name: String,
   }
 
   private def parseSubparser(args: List[String])(
-      implicit result: ParsingResult = new ParsingResult()): List[String] = {
+      implicit result: ParsingResult/* = new ParsingResult()*/): List[String] = {
     breakable {
       if (subparsers.nonEmpty) {
         for (subparser <- subparsers) {
@@ -288,6 +301,8 @@ case class Parser(override val name: String,
           parsePositionals(if (parentParsers.isEmpty) args else args.tail)))
     } catch {
       case x: IntermediateParsingException =>
+        println(x.getMessage)
+        println()
         println(this.help())
         throw new ParsingException(x.getMessage)
       case _: HelpException =>
@@ -320,26 +335,39 @@ case class Parser(override val name: String,
     msg ++= "{"
     msg ++= optionals
       .filter(_.isInstanceOf[Optional])
-      .map(x => s"${x.asInstanceOf[Optional].short}")
+      .map(x => s"-${x.asInstanceOf[Optional].short}")
       .mkString(",")
-    msg ++= ","
-    msg ++= optionals
+    if(optionals.exists(_.isInstanceOf[Optional])) {
+      msg ++= ","
+    }
+    msg ++= flags
       .filter(_.isInstanceOf[Flag])
-      .map(x => s"${x.asInstanceOf[Flag].short}")
+      .map(x => s"-${x.asInstanceOf[Flag].short}")
       .mkString(",")
-    msg ++= ",-h,--help"
-    msg ++= "} "
+    if(flags.exists(_.isInstanceOf[Flag])) {
+      msg ++= ","
+    }
+    msg ++= "-h"
+    msg ++= "}"
+    if(subparsers.nonEmpty) {
+      msg ++= " "
+    }
     msg ++= subparsers.map(_.name).mkString(" ")
     msg ++= "\n\n"
-    msg ++= description + "\n\n          "
-    msg ++= (positionals ++ optionals).map(_.help()).mkString("\n\n          ")
-    msg ++= "\n\n          "
-    msg ++= "-h/--help prints this help message"
-    msg ++= "\n\n          "
+    msg ++= description + "\n\n"
+    msg ++= (positionals ++ optionals ++ flags).map(x => s"          ${x.help()}").mkString("\n\n")
+    if( (positionals ++ optionals ++ flags).nonEmpty) {
+      msg ++= "\n\n"
+    }
+    msg ++= "          -h/--help prints this help message"
+    msg ++= "\n\n"
     msg ++= subparsers
-      .map(sp => s"${sp.name} ${sp.description}")
-      .mkString("\n\n          ")
-    msg ++= "\n\n\n"
+      .map(sp => s"          ${sp.name} ${sp.description}")
+      .mkString("\n\n")
+    if(subparsers.nonEmpty) {
+      msg ++= "\n\n"
+    }
+    msg ++= "\n"
     msg.toString
   }
 }
