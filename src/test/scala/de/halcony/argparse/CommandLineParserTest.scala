@@ -87,6 +87,44 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         "option2" -> Some("ttt")
       )
     }
+    "be able to ignore order of optional parameters in more complex context" in {
+      val mainParser: Parser = de.halcony.argparse
+        .Parser(
+          "test",
+          "test"
+        )
+        .addSubparser(
+          de.halcony.argparse
+            .Parser("create", "test")
+            .addPositional("bp", "test")
+            .addOptional("out",
+              "o",
+              "output",
+              Some("out"))
+            .addOptional("lin",
+              "l",
+              "linking",
+              Some("strict"))
+            .addOptional("end",
+              "e",
+              "endings",
+              Some("endings"))
+            .addOptional("con",
+              "c",
+              "con",
+              None)
+            .addDefault[String]("ident","unique")
+        )
+      val result = mainParser.parseArgv(List("create", "positional", "-l","lparam","-o","oparam","-c","cparam"))
+      result.toMap shouldBe Map(
+        "ident" -> "unique",
+        "lin" -> Some("lparam"),
+        "out" -> Some("oparam"),
+        "con" -> Some("cparam"),
+        "end" -> Some("endings"),
+        "bp" -> "positional"
+      )
+    }
   }
 
 }
