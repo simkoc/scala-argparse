@@ -77,6 +77,16 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         "flag" -> true
       )
     }
+    "be able to parse optional parameter out of order" in {
+      val parser = Parser("test","test")
+        .addOptional("option1","o","optional1",Some("test"))
+        .addOptional("option2","c","option2",Some("other"))
+      val result = parser.parseArgv(List("-c","ttt","-o","ssss"))
+      result.toMap shouldBe Map(
+        "option1" -> Some("ssss"),
+        "option2" -> Some("ttt")
+      )
+    }
   }
 
 }

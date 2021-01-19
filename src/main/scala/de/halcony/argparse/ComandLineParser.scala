@@ -261,9 +261,17 @@ case class Parser(override val name: String,
       implicit result: ParsingResult /* = new ParsingResult()*/ )
     : List[String] = {
     var sargs = args
-    for (optional <- optionals ++ flags) {
-      if (sargs.nonEmpty && !optional.parsed) {
-        sargs = optional.parse(sargs)
+    var change = true
+    while (change) {
+      change = false
+      for (optional <- optionals ++ flags) {
+        if (sargs.nonEmpty && !optional.parsed) {
+          val newArgs = optional.parse(sargs)
+          if (newArgs.length < sargs.length) {
+            change = true
+            sargs = newArgs
+          }
+        }
       }
     }
     sargs
