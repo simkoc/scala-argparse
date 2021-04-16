@@ -1,7 +1,6 @@
 name :=  "scala argparse"
 scalaVersion := "2.13.3"
 organization := "de.halcony"
-//version := "1.1.2"
 
 enablePlugins(JavaAppPackaging)
 
