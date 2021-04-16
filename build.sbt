@@ -91,7 +91,7 @@ ThisBuild / publishTo := {
   else Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 ThisBuild / publishMavenStyle.withRank(KeyRanks.Invisible) := true
-usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
+
 
 // below is pretty much cargo cult/fuzzing....
 import ReleaseTransformations._
