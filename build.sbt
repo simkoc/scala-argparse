@@ -78,13 +78,13 @@ ThisBuild / description := "A re-imagined implementation of the handy python-arg
 ThisBuild / licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / homepage := Some(url("https://github.com/simkoc/scala-argparse"))
 
-ThisBuild / pomIncludeRepository := { _ => true }
+ThisBuild / pomIncludeRepository.withRank(KeyRanks.Invisible) := { _ => true }
 ThisBuild / publishTo := {
   val nexus = "https://s01.oss.sonatype.org/"
   if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
   else Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
-ThisBuild / publishMavenStyle := true
+ThisBuild / publishMavenStyle.withRank(KeyRanks.Invisible) := true
 usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
 
 // below is pretty much cargo cult....
@@ -97,6 +97,7 @@ releaseProcess := Seq[ReleaseStep](
   inquireVersions,
   setReleaseVersion,
   commitReleaseVersion,
+  releaseStepCommand("sonatypeOpen \"de.halcony\" \"scala-argparse\""),
   publishArtifacts,
   releaseStepCommand("publishLocalSigned"),
   releaseStepCommand("sonatypeRelease"),
