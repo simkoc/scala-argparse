@@ -1,6 +1,7 @@
 name :=  "scala argparse"
 scalaVersion := "2.13.3"
 organization := "de.halcony"
+ThisBuild / description := "A re-imagined implementation of the handy python-argparse functionality for scala"
 
 enablePlugins(JavaAppPackaging)
 
@@ -60,12 +61,16 @@ testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 checkstyleConfigLocation := CheckstyleConfigLocation.File("config/checkstyle/google_checks.xml")
 checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Info)
 
+// this is required for sonatype sync requirements
+sonatypeProfileName := "de.halcony"
+// this is required for sonatype sync requirements
 ThisBuild / scmInfo := Some(
   ScmInfo(
     url("https://github.com/simkoc/scala-argparse"),
     "scm:git@github.com:simkoc/scala-argparse.git"
   )
 )
+// this is required for sonatype sync requirements
 ThisBuild / developers := List(
   Developer(
     id   = "simkoc",
@@ -74,8 +79,9 @@ ThisBuild / developers := List(
     url = url("https://github.com/simkoc/")
   )
 )
-ThisBuild / description := "A re-imagined implementation of the handy python-argparse functionality for scala"
+// this is required for sonatype sync requirements
 ThisBuild / licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
+// this is required for sonatype sync requirements
 ThisBuild / homepage := Some(url("https://github.com/simkoc/scala-argparse"))
 
 ThisBuild / pomIncludeRepository.withRank(KeyRanks.Invisible) := { _ => true }
@@ -87,7 +93,7 @@ ThisBuild / publishTo := {
 ThisBuild / publishMavenStyle.withRank(KeyRanks.Invisible) := true
 usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
 
-// below is pretty much cargo cult....
+// below is pretty much cargo cult/fuzzing....
 import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
@@ -97,10 +103,9 @@ releaseProcess := Seq[ReleaseStep](
   inquireVersions,
   setReleaseVersion,
   commitReleaseVersion,
-  releaseStepCommand("sonatypeOpen \"de.halcony\" \"scala-argparse\""),
   publishArtifacts,
   releaseStepCommand("publishLocalSigned"),
-  releaseStepCommand("sonatypeRelease"),
+  releaseStepCommand("sonatypeBundleRelease"),
   setNextVersion,
   commitNextVersion,
   pushChanges,
