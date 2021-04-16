@@ -84,19 +84,20 @@ ThisBuild / licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses
 // this is required for sonatype sync requirements
 ThisBuild / homepage := Some(url("https://github.com/simkoc/scala-argparse"))
 
-ThisBuild / pomIncludeRepository.withRank(KeyRanks.Invisible) := { _ => true }
-ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-ThisBuild / publishMavenStyle.withRank(KeyRanks.Invisible) := true
+//ThisBuild / pomIncludeRepository.withRank(KeyRanks.Invisible) := { _ => true }
+//ThisBuild / publishTo := {
+//  val nexus = "https://s01.oss.sonatype.org/"
+//  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+//  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+//}
+//ThisBuild / publishMavenStyle.withRank(KeyRanks.Invisible) := true
 
 
 // below is pretty much cargo cult/fuzzing....
 import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
+publishTo := sonatypePublishToBundle.value
 releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
@@ -104,7 +105,7 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   publishArtifacts,
-  releaseStepCommand("publishLocalSigned"),
+  releaseStepCommand("publishSigned"),
   releaseStepCommand("sonatypeBundleRelease"),
   setNextVersion,
   commitNextVersion,
