@@ -90,7 +90,7 @@ usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
 // below is pretty much cargo cult....
 import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
-releaseVersionBump := sbtrelease.Version.Bump.Major
+releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
