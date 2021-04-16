@@ -91,12 +91,13 @@ usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
-  runTest,
-  runClean,
   inquireVersions,
+  runClean,
+  runTest,
   setNextVersion,
   setReleaseVersion,
   commitReleaseVersion,
+  pushChanges,
   //releaseStepCommand("sonatypeOpen \"de.halcony\" \"scala-argparse\""),
   releaseStepCommand("publishLocalSigned"),
   //releaseStepCommand("sonatypeRelease")
