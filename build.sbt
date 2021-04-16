@@ -93,6 +93,7 @@ import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   runTest,
   runClean,
+  inquireVersions,
   setNextVersion,
   setReleaseVersion,
   commitReleaseVersion,
