@@ -87,16 +87,15 @@ ThisBuild / publishTo := {
 ThisBuild / publishMavenStyle := true
 usePgpKeyHex("1C0D5EA07C0AEDB9E0223EF3C81E4928829ACB2F")
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
+// below is pretty much cargo cult....
 import ReleaseTransformations._
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseVersionBump := sbtrelease.Version.Bump.Major
 releaseProcess := Seq[ReleaseStep](
-  inquireVersions,
   runClean,
   runTest,
+  inquireVersions,
   setReleaseVersion,
   commitReleaseVersion,
-  pushChanges,
-  //releaseStepCommand("sonatypeOpen \"de.halcony\" \"scala-argparse\""),
   releaseStepCommand("publishLocalSigned"),
-  //releaseStepCommand("sonatypeRelease")
 )
