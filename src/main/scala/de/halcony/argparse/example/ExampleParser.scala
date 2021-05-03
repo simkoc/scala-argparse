@@ -9,6 +9,9 @@ object ExampleParser {
     .addOptional("message","m","message",None,"the message displayed if the program is stopped via flag")
     .addSubparser {
       Parser("first", "the first subparser branch")
+        .addPositional("positional","a positional that has to be provided")
+        .addFlag("flag","f","flag","a flag that can be set")
+        .addOptional("optional","o","optional", Some("default"), "an optional parameter")
       .addDefault[ParsingResult => Unit]("func", first)
     }
     .addSubparser {
