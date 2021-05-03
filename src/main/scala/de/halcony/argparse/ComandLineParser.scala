@@ -132,6 +132,18 @@ case class Flag(override val name: String,
   }
 }
 
+object HelpFlag extends Flag("help","h","help", "prints this help message") {
+
+  override private[argparse] def parse(args : List[String])(implicit result : ParsingResult) : List[String] = {
+    if("-h" == args.head || "--help" == args.head) {
+      throw new HelpException
+    } else {
+      args
+    }
+  }
+
+}
+
 class ParsingResult() {
 
   private sealed trait Result
@@ -192,6 +204,7 @@ case class Parser(override val name: String,
     new ListBuffer[CommandLineParser]
   private val flags: collection.mutable.ListBuffer[CommandLineParser] =
     new ListBuffer[CommandLineParser]
+  flags.addOne(HelpFlag)
   private val subparsers: collection.mutable.ListBuffer[CommandLineParser] =
     new ListBuffer[CommandLineParser]
   private val defaults: collection.mutable.ListBuffer[CommandLineParser] =
@@ -302,7 +315,7 @@ case class Parser(override val name: String,
     Nil
   }
 
-  override def parse(args: List[String])(
+  override private[argparse] def parse(args: List[String])(
       implicit result: ParsingResult = new ParsingResult()): List[String] = {
     try {
       assert((args.nonEmpty && args.head == this.name) || parentParsers.isEmpty)
@@ -331,9 +344,9 @@ case class Parser(override val name: String,
     }
   }
 
-  def parseArgv(argv: List[String]): ParsingResult = {
+  def parse(argv: Array[String]): ParsingResult = {
     implicit val parsingResult: ParsingResult = new ParsingResult()
-    parse(argv) match {
+    parse(argv.toList) match {
       case Nil =>
       case remains =>
         throw new ParsingException(
@@ -364,10 +377,6 @@ case class Parser(override val name: String,
       .filter(_.isInstanceOf[Flag])
       .map(x => s"-${x.asInstanceOf[Flag].short}")
       .mkString(",")
-    if (flags.exists(_.isInstanceOf[Flag])) {
-      msg ++= ","
-    }
-    msg ++= "-h"
     msg ++= "}"
     if (subparsers.nonEmpty) {
       msg ++= " "
@@ -381,8 +390,6 @@ case class Parser(override val name: String,
     if ((positionals ++ optionals ++ flags).nonEmpty) {
       msg ++= "\n\n"
     }
-    msg ++= "          -h/--help prints this help message"
-    msg ++= "\n\n"
     msg ++= subparsers
       .map(sp => s"          ${sp.name} ${sp.description}")
       .mkString("\n\n")
