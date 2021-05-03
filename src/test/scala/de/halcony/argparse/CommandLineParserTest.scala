@@ -10,7 +10,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         .addPositional("pos1")
         .addOptional("opt1", "o")
         .addFlag("flag1", "f")
-      val result = parser.parseArgv(List("value", "-o", "optional", "-f"))
+      val result = parser.parse(Array("value", "-o", "optional", "-f"))
       result.get[String]("pos1") shouldBe "value"
       result.get[Option[String]]("opt1") shouldBe Some("optional")
       result.get[Boolean]("flag1") shouldBe true
@@ -24,14 +24,14 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         .addSubparser {
           Parser("other", "other").addPositional("pos3")
         }
-      val result = parser.parseArgv(List("value", "next", "otherValue"))
+      val result = parser.parse(Array("value", "next", "otherValue"))
       result.get[String]("pos1") shouldBe "value"
       result.get[String]("pos2") shouldBe "otherValue"
     }
     "be able to work with default values" in {
       val parser = Parser("test", "test")
         .addDefault[Int => Int]("func", (x: Int) => x * x, "default function")
-      val result = parser.parseArgv(List(""))
+      val result = parser.parse(Array(""))
       result.get[Int => Int]("func").apply(4) shouldBe 16
     }
     "be able to work with default values in subparser" in {
@@ -42,7 +42,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         .addSubparser(Parser("add", "add")
           .addDefault[Int => Int]("func", (x: Int) => x + x, "default function")
         )
-      val result = parser.parseArgv(List("square"))
+      val result = parser.parse(Array("square"))
       result.get[Int => Int]("func").apply(4) shouldBe 16
     }
     "be able to work with default values in subparser for either" in {
@@ -53,7 +53,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         .addSubparser(Parser("add", "add")
           .addDefault[Int => Int]("func", (x: Int) => x + x, "default function")
         )
-      val result = parser.parseArgv(List("add"))
+      val result = parser.parse(Array("add"))
       result.get[Int => Int]("func").apply(4) shouldBe 8
     }
     "be able to parse mixture of flag in subparser" in {
@@ -69,11 +69,12 @@ class CommandLineParserTest  extends WordSpec with Matchers {
             .addOptional("option", "l", "option")
             .addFlag("flag", "f", "flag")
         }
-      val result = parser.parseArgv(List("-o", "optional", "relevant", "positional", "-l", "number", "-f"))
+      val result = parser.parse(Array("-o", "optional", "relevant", "positional", "-l", "number", "-f"))
       result.toMap shouldBe Map(
         "optional" -> Some("optional"),
         "first" -> "positional",
         "option" -> Some("number"),
+        "help" -> false,
         "flag" -> true
       )
     }
@@ -81,9 +82,10 @@ class CommandLineParserTest  extends WordSpec with Matchers {
       val parser = Parser("test","test")
         .addOptional("option1","o","optional1",Some("test"))
         .addOptional("option2","c","option2",Some("other"))
-      val result = parser.parseArgv(List("-c","ttt","-o","ssss"))
+      val result = parser.parse(Array("-c","ttt","-o","ssss"))
       result.toMap shouldBe Map(
         "option1" -> Some("ssss"),
+        "help" -> false,
         "option2" -> Some("ttt")
       )
     }
@@ -115,12 +117,13 @@ class CommandLineParserTest  extends WordSpec with Matchers {
               None)
             .addDefault[String]("ident","unique")
         )
-      val result = mainParser.parseArgv(List("create", "positional", "-l","lparam","-o","oparam","-c","cparam"))
+      val result = mainParser.parse(Array("create", "positional", "-l","lparam","-o","oparam","-c","cparam"))
       result.toMap shouldBe Map(
         "ident" -> "unique",
         "lin" -> Some("lparam"),
         "out" -> Some("oparam"),
         "con" -> Some("cparam"),
+        "help" -> false,
         "end" -> Some("endings"),
         "bp" -> "positional"
       )

@@ -49,15 +49,15 @@ class CommandLineParserHelpTest extends WordSpec with Matchers {
         .addFlag("first","f","flag1","the first flag")
         .addFlag("second","s","flag2", "the second flag")
       parser.help() shouldBe
-        """usage: test {-f,-s,-h}
+        """usage: test {-h,-f,-s}
           |
           |test
+          |
+          |          -h/--help prints this help message
           |
           |          -f/--flag1 the first flag
           |
           |          -s/--flag2 the second flag
-          |
-          |          -h/--help prints this help message
           |
           |
           |""".stripMargin
@@ -73,7 +73,7 @@ class CommandLineParserHelpTest extends WordSpec with Matchers {
           .addFlag("first","f","flag1","the first flag")
           .addFlag("second","s","flag2", "the second flag")
       parser.help() shouldBe
-        """usage: test [first] [second] {-o,-c,-f,-s,-h}
+        """usage: test [first] [second] {-o,-c,-h,-f,-s}
           |
           |test
           |
@@ -85,11 +85,11 @@ class CommandLineParserHelpTest extends WordSpec with Matchers {
           |
           |          -c/--opt2 <value> this is the second optional (def:second)
           |
+          |          -h/--help prints this help message
+          |
           |          -f/--flag1 the first flag
           |
           |          -s/--flag2 the second flag
-          |
-          |          -h/--help prints this help message
           |
           |
           |""".stripMargin
