@@ -8,7 +8,7 @@ sealed trait ParsingResultValue[T] extends Result {
 
 }
 
-sealed trait OptionalParsingResultValue[T] extends ParsingResultValue[T] {
+sealed trait OptionalValue[T] extends ParsingResultValue[Option[T]] {
 
   val provided: Boolean
 
@@ -19,13 +19,24 @@ case class DefaultValue[T](override val value: T) extends ParsingResultValue[T]
 case class PositionalValue[T](override val value: T)
     extends ParsingResultValue[T]
 
-case class OptionalValue[T](override val value: T,
-                            override val provided: Boolean)
-    extends OptionalParsingResultValue[T]
+case class SomeOptionalValue[T](providedValue: T,
+                                override val provided: Boolean)
+    extends OptionalValue[T] {
 
-case class FlagValue(override val value: Boolean,
-                     override val provided: Boolean)
-    extends OptionalParsingResultValue[Boolean]
+  override val value: Option[T] = Some(providedValue)
+
+}
+
+case class NoneOptionalValue[T]() extends OptionalValue[T] {
+
+  override val value: Option[T] = None
+
+  override val provided: Boolean = false
+
+}
+
+case class FlagValue(override val value: Boolean, provided: Boolean)
+    extends ParsingResultValue[Boolean]
 
 case class UnknownArgument(name: String, atype: Option[String])
     extends Throwable {
@@ -61,6 +72,7 @@ class ParsingResult() {
 
   def getValue[T](name: String): T = {
     results.get(name) match {
+      case Some(x: OptionalValue[T])      => x.value.get
       case Some(x: ParsingResultValue[T]) => x.value
       case None                           => throw UnknownArgument(name)
     }
@@ -74,7 +86,7 @@ class ParsingResult() {
 
   def getValueOrElse[T](name: String, otherwise: => T): T = {
     results.getOrElse(name, otherwise) match {
-      case x: OptionalParsingResultValue[Option[T]] =>
+      case x: OptionalValue[T] =>
         x.value.getOrElse(otherwise)
       case x: ParsingResultValue[T] => x.value
     }
