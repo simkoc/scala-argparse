@@ -32,7 +32,6 @@ case class Positional(override val name: String,
                       override val description: String = "")
     extends CommandLineParser(name, description) {
 
-
   private[argparse] override def parse(args: List[String])(
       implicit result: ParsingResult): List[String] = {
     result.addResult(name, PositionalValue(args.head))
@@ -60,7 +59,7 @@ case class Optional(override val name: String,
     if (s"-$short" == args.head) {
       ret = args.tail
       //value = Some(ret.head)
-      result.addResult(name, OptionalValue(ret.head,provided = true))
+      result.addResult(name, OptionalValue(ret.head, provided = true))
       ret = ret.tail
       parsed = true
     } else {
@@ -70,7 +69,7 @@ case class Optional(override val name: String,
           if (s"--$x" == args.head) {
             ret = args.tail
             //value = Some(ret.head)
-            result.addResult(name, OptionalValue(ret.head,provided = true))
+            result.addResult(name, OptionalValue(ret.head, provided = true))
             ret = ret.tail
             parsed = true
           }
@@ -104,7 +103,7 @@ case class Flag(override val name: String,
       implicit result: ParsingResult): List[String] = {
     var ret = args
     if (s"-$short" == args.head) {
-      result.addResult(name, FlagValue(value = true,provided = true))
+      result.addResult(name, FlagValue(value = true, provided = true))
       parsed = true
       ret = ret.tail
     } else {
@@ -112,7 +111,7 @@ case class Flag(override val name: String,
         case "" =>
         case x =>
           if (s"--$x" == args.head) {
-            result.addResult(name, FlagValue(value = true,provided = true))
+            result.addResult(name, FlagValue(value = true, provided = true))
             parsed = true
             ret = ret.tail
           }
@@ -130,10 +129,11 @@ case class Flag(override val name: String,
   }
 }
 
-object HelpFlag extends Flag("help","h","help", "prints this help message") {
+object HelpFlag extends Flag("help", "h", "help", "prints this help message") {
 
-  override private[argparse] def parse(args : List[String])(implicit result : ParsingResult) : List[String] = {
-    if("-h" == args.head || "--help" == args.head) {
+  override private[argparse] def parse(args: List[String])(
+      implicit result: ParsingResult): List[String] = {
+    if ("-h" == args.head || "--help" == args.head) {
       throw new HelpException
     } else {
       args
@@ -205,8 +205,7 @@ case class Parser(override val name: String,
   }
 
   private def parsePositionals(args: List[String])(
-      implicit result: ParsingResult)
-    : List[String] = {
+      implicit result: ParsingResult): List[String] = {
     var sargs = args
     for (positional <- positionals) {
       if (sargs.isEmpty) {
@@ -219,8 +218,7 @@ case class Parser(override val name: String,
   }
 
   private def parseOptionals(args: List[String])(
-      implicit result: ParsingResult)
-    : List[String] = {
+      implicit result: ParsingResult): List[String] = {
     var sargs = args
     var change = true
     while (change) {
@@ -239,8 +237,7 @@ case class Parser(override val name: String,
   }
 
   private def parseSubparser(args: List[String])(
-      implicit result: ParsingResult)
-    : List[String] = {
+      implicit result: ParsingResult): List[String] = {
     breakable {
       if (subparsers.nonEmpty) {
         for (subparser <- subparsers) {
@@ -270,13 +267,17 @@ case class Parser(override val name: String,
       parsed = true
       defaults.foreach(
         default =>
-          result.addResult(default.name,
-                           DefaultValue(default.asInstanceOf[Default[AnyRef]].value)))
+          result.addResult(
+            default.name,
+            DefaultValue(default.asInstanceOf[Default[AnyRef]].value)))
       optionals.foreach(
         optional =>
-          result.addResult(optional.name,
-                           OptionalValue(Some(optional.asInstanceOf[Optional].default),provided = false)))
-      flags.foreach(flag => result.addResult(flag.name, FlagValue(value = false,provided = false)))
+          result.addResult(
+            optional.name,
+            OptionalValue(Some(optional.asInstanceOf[Optional].default),
+                          provided = false)))
+      flags.foreach(flag =>
+        result.addResult(flag.name, FlagValue(value = false, provided = false)))
       parseSubparser(
         parseOptionals(
           parsePositionals(if (parentParsers.isEmpty) args else args.tail)))
