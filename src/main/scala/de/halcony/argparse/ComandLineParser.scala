@@ -32,12 +32,10 @@ case class Positional(override val name: String,
                       override val description: String = "")
     extends CommandLineParser(name, description) {
 
-  //var value : String = ""
 
   private[argparse] override def parse(args: List[String])(
       implicit result: ParsingResult): List[String] = {
-    //value = args.head
-    result.addResult(name, args.head)
+    result.addResult(name, PositionalValue(args.head))
     parsed = true
     args.tail
   }
@@ -62,7 +60,7 @@ case class Optional(override val name: String,
     if (s"-$short" == args.head) {
       ret = args.tail
       //value = Some(ret.head)
-      result.addResult(name, Some(ret.head))
+      result.addResult(name, OptionalValue(ret.head,provided = true))
       ret = ret.tail
       parsed = true
     } else {
@@ -72,7 +70,7 @@ case class Optional(override val name: String,
           if (s"--$x" == args.head) {
             ret = args.tail
             //value = Some(ret.head)
-            result.addResult(name, Some(ret.head))
+            result.addResult(name, OptionalValue(ret.head,provided = true))
             ret = ret.tail
             parsed = true
           }
@@ -106,7 +104,7 @@ case class Flag(override val name: String,
       implicit result: ParsingResult): List[String] = {
     var ret = args
     if (s"-$short" == args.head) {
-      result.addResult(name, true)
+      result.addResult(name, FlagValue(value = true,provided = true))
       parsed = true
       ret = ret.tail
     } else {
@@ -114,7 +112,7 @@ case class Flag(override val name: String,
         case "" =>
         case x =>
           if (s"--$x" == args.head) {
-            result.addResult(name, true)
+            result.addResult(name, FlagValue(value = true,provided = true))
             parsed = true
             ret = ret.tail
           }
@@ -140,56 +138,6 @@ object HelpFlag extends Flag("help","h","help", "prints this help message") {
     } else {
       args
     }
-  }
-
-}
-
-class ParsingResult() {
-
-  private sealed trait Result
-
-  private sealed case class ResultValue[T](value: T) extends Result {
-
-    override def toString: String = {
-      s"$value"
-    }
-
-  }
-
-  private val results: collection.mutable.Map[String, Result] =
-    collection.mutable.Map()
-
-  private[argparse] def addResult[T](name: String, value: T): Unit = {
-    val res = ResultValue[T](value)
-    results.addOne((name, res))
-  }
-
-  def get[T](name: String): T = {
-    results.get(name) match {
-      case Some(x: ResultValue[T]) => x.value
-      case None =>
-        throw new RuntimeException(s"expected argument $name but none found")
-    }
-  }
-
-  def getOrElse[T](name: String, otherwise: () => T): T = {
-    results.getOrElse(name, otherwise) match {
-      case x: ResultValue[T] => x.value
-    }
-  }
-
-  override def toString: String = {
-    results.iterator
-      .map { pair =>
-        s"${pair._1} -> ${pair._2.toString}"
-      }
-      .mkString("\n")
-  }
-
-  def toMap: Map[String, AnyVal] = {
-    results.map { pair =>
-      pair._1 -> pair._2.asInstanceOf[ResultValue[AnyVal]].value
-    }.toMap
   }
 
 }
@@ -257,7 +205,7 @@ case class Parser(override val name: String,
   }
 
   private def parsePositionals(args: List[String])(
-      implicit result: ParsingResult /* = new ParsingResult()*/ )
+      implicit result: ParsingResult)
     : List[String] = {
     var sargs = args
     for (positional <- positionals) {
@@ -271,7 +219,7 @@ case class Parser(override val name: String,
   }
 
   private def parseOptionals(args: List[String])(
-      implicit result: ParsingResult /* = new ParsingResult()*/ )
+      implicit result: ParsingResult)
     : List[String] = {
     var sargs = args
     var change = true
@@ -291,7 +239,7 @@ case class Parser(override val name: String,
   }
 
   private def parseSubparser(args: List[String])(
-      implicit result: ParsingResult /* = new ParsingResult()*/ )
+      implicit result: ParsingResult)
     : List[String] = {
     breakable {
       if (subparsers.nonEmpty) {
@@ -323,12 +271,12 @@ case class Parser(override val name: String,
       defaults.foreach(
         default =>
           result.addResult(default.name,
-                           default.asInstanceOf[Default[AnyRef]].value))
+                           DefaultValue(default.asInstanceOf[Default[AnyRef]].value)))
       optionals.foreach(
         optional =>
           result.addResult(optional.name,
-                           optional.asInstanceOf[Optional].default))
-      flags.foreach(flag => result.addResult(flag.name, false))
+                           OptionalValue(Some(optional.asInstanceOf[Optional].default),provided = false)))
+      flags.foreach(flag => result.addResult(flag.name, FlagValue(value = false,provided = false)))
       parseSubparser(
         parseOptionals(
           parsePositionals(if (parentParsers.isEmpty) args else args.tail)))
@@ -350,7 +298,7 @@ case class Parser(override val name: String,
       case Nil =>
       case remains =>
         throw new ParsingException(
-          s"The input $argv was not completely parsed and $remains remains")
+          s"The input ${argv.mkString("Array(", ", ", ")")} was not completely parsed and $remains remains")
     }
     parsingResult
   }
