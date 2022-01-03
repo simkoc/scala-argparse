@@ -51,14 +51,11 @@ case class Optional(override val name: String,
                     override val description: String = "")
     extends CommandLineParser(name, description) {
 
-  //var value : String = default
-
   private[argparse] override def parse(args: List[String])(
       implicit result: ParsingResult): List[String] = {
     var ret = args
     if (s"-$short" == args.head) {
       ret = args.tail
-      //value = Some(ret.head)
       result.addResult(name, SomeOptionalValue(ret.head, provided = true))
       ret = ret.tail
       parsed = true
@@ -68,7 +65,6 @@ case class Optional(override val name: String,
         case x =>
           if (s"--$x" == args.head) {
             ret = args.tail
-            //value = Some(ret.head)
             result.addResult(name, SomeOptionalValue(ret.head, provided = true))
             ret = ret.tail
             parsed = true
@@ -96,8 +92,6 @@ case class Flag(override val name: String,
                 long: String = "",
                 override val description: String = "")
     extends CommandLineParser(name, description) {
-
-  //var value : Boolean = false
 
   private[argparse] override def parse(args: List[String])(
       implicit result: ParsingResult): List[String] = {
