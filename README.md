@@ -35,10 +35,10 @@ def main(argv : Array[String]) : Unit = {
             /* and so on and so forth */
         
     val pargs = parser.parseArgv(argv.toList)
-    pargs.get[Boolean]("flag-name")
-    pargs.get[Option[String]]("optional-name")
-    pargs.get[String]("positional-name")
-    pargs.get[<hereIsTheType>]("default-value-name") 
+    pargs.getValue[Boolean]("flag-name")
+    pargs.getValue[String]("optional-name")
+    pargs.getValue[String]("positional-name")
+    pargs.getValue[<hereIsTheType>]("default-value-name") 
 ```
 
 ```
