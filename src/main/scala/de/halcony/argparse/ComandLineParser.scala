@@ -59,7 +59,7 @@ case class Optional(override val name: String,
     if (s"-$short" == args.head) {
       ret = args.tail
       //value = Some(ret.head)
-      result.addResult(name, OptionalValue(ret.head, provided = true))
+      result.addResult(name, SomeOptionalValue(ret.head, provided = true))
       ret = ret.tail
       parsed = true
     } else {
@@ -69,7 +69,7 @@ case class Optional(override val name: String,
           if (s"--$x" == args.head) {
             ret = args.tail
             //value = Some(ret.head)
-            result.addResult(name, OptionalValue(ret.head, provided = true))
+            result.addResult(name, SomeOptionalValue(ret.head, provided = true))
             ret = ret.tail
             parsed = true
           }
@@ -272,10 +272,12 @@ case class Parser(override val name: String,
             DefaultValue(default.asInstanceOf[Default[AnyRef]].value)))
       optionals.foreach(
         optional =>
-          result.addResult(
-            optional.name,
-            OptionalValue(Some(optional.asInstanceOf[Optional].default),
-                          provided = false)))
+          result.addResult(optional.name,
+                           optional.asInstanceOf[Optional].default match {
+                             case Some(value) =>
+                               SomeOptionalValue(value, provided = false)
+                             case None => NoneOptionalValue()
+                           }))
       flags.foreach(flag =>
         result.addResult(flag.name, FlagValue(value = false, provided = false)))
       parseSubparser(
