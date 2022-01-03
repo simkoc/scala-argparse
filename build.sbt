@@ -90,7 +90,6 @@ import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 publishTo := sonatypePublishToBundle.value
-//sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
