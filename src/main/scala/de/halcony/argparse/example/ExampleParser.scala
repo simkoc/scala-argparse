@@ -33,11 +33,11 @@ object ExampleParser {
     try {
       println(argv.toList)
       val pargs: ParsingResult = parser.parse(argv)
-      if (pargs.get[Boolean]("stop")) {
-        println("stop message:" + pargs.get[Option[String]]("message").getOrElse("No stop message provided"))
-        sys.exit()
+      if (pargs.getValue[Boolean]("stop")) {
+        println("stop message:" + pargs.getValueOrElse[String]("message","No stop message provided"))
+        scala.sys.exit(0)
       }
-      pargs.get[ParsingResult => Unit]("func")(pargs)
+      pargs.getValue[ParsingResult => Unit]("func")(pargs)
     } catch {
       case _ : ParsingException =>
     }
