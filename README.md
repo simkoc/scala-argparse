@@ -26,26 +26,26 @@ import de.halcony.argparse._
 def main(argv : Array[String]) : Unit = {
     val parser = Parser("example parser",
                         "this is the description for the example parser")
-        .addPosition("positional-name","positional description")
-        .addOptional("optional-name","o","optional-long-parameter-name",Some("default-value"),"the description")
-        .addFlag("flag-name","f","flag-long-name","the description")
+        .addPositional("positional-name",n => n.toInt, "positional description")
+        .addOptional("optional-name",'o',"optional-long-parameter-name",identity[String],Some("default-value"),"the description")
+        .addFlag("flag-name",'f',"flag-long-name","the description")
         .addDefault[<hereIsTheType]("default-value-name", defaultValueValue)
         .addSubparser(Parser("subparser-name","subparser description")
             ...
             /* and so on and so forth */
         
     val pargs = parser.parseArgv(argv.toList)
-    pargs.getValue[Boolean]("flag-name")
-    pargs.getValue[String]("optional-name")
-    pargs.getValue[String]("positional-name")
-    pargs.getValue[<hereIsTheType>]("default-value-name") 
+    pargs.get[Boolean]("flag-name")
+    pargs.get[String]("optional-name")
+    pargs.get[Int]("positional-name")
+    pargs.get[<hereIsTheType>]("default-value-name") 
 ```
 
 ```
 ./program positional-value -o optional-value -f subparser-name .... 
 ```
 
-There is theoretically a help flag triggered by `-h/--help` however this tends to conflict with the help flag of java itself.
+There is a help flag that is triggered by `-h/--help` however this conflicts with the help flag of java itself,
+thus you need to adapt your cmd line call accordingly.
 
-The hierarchy of parsers is flattened concerning for the results using the path described by the arguments. 
-The last (i.e., the deepest parser) takes precedent if multiple same (e.g., default values) are defined.
+The hierarchy of parsers is flattened and the last (i.e., the deepest parser) takes precedent if multiple same (e.g., default values) are defined.
