@@ -8,8 +8,8 @@ object ExampleParser {
 
   val parser: Parser =
     Parser("Example Parser", "example parser to show and test functionality")
-      .addPositional("stuff",identity[String],"positional")
-      .addPositional("stuff2",identity[String],"positional")
+      .addPositional("stuff", identity[String], "positional")
+      .addPositional("stuff2", identity[String], "positional")
       .addFlag("stop",
                's',
                "stop",

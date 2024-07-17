@@ -160,8 +160,9 @@ case class Parser(override val name: String,
         current = positional.parse(current)
       }
       if (args.size - positionals.length != current.size) {
-        throw new ParsingException(s"there weren't enough positional arguments provided, the last ${args.size - positionals.length} are missing",
-                                   help())
+        throw new ParsingException(
+          s"there weren't enough positional arguments provided, the last ${args.size - positionals.length} are missing",
+          help())
       }
       var count = current.size
       //3rd process the optional and flags
