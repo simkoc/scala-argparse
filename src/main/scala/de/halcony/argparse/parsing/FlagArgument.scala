@@ -16,14 +16,14 @@ class FlagArgument protected (override val name: String,
 
   override def parse(args: Iterable[String])(
       implicit result: ParsingResult): Iterable[String] = {
+    if (result.getOptional[Boolean](name).isEmpty) {
+      result.addResult(name, new ResultValue[Boolean](value = false))
+    }
     if (args.nonEmpty) {
       if (short == args.head || long == args.head) {
         result.addResult(name, new ResultValue[Boolean](value = true))
         args.tail
       } else {
-        if (result.getOptional[Boolean](name).isEmpty) {
-          result.addResult(name, new ResultValue[Boolean](value = false))
-        }
         args
       }
     } else {

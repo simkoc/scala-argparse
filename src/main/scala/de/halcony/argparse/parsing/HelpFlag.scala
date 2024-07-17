@@ -12,6 +12,7 @@ object HelpFlag
     if (args.nonEmpty && (args.head == this.short || args.head == this.long)) {
       throw HelpException
     } else {
+      result.addResult("help", new ResultValue[Boolean](false))
       args
     }
   }

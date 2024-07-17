@@ -2,8 +2,10 @@ package de.halcony.argparse.parsing
 
 import de.halcony.argparse.ParsingResult
 
+import scala.annotation.nowarn
 import scala.reflect.ClassTag
 
+@nowarn
 class PositionalArgument[T] protected (
     name: String,
     description: String,

@@ -20,6 +20,13 @@ class CommandLineParserTest  extends WordSpec with Matchers {
       result.get[Boolean]("flag1") shouldBe true
     }
 
+    "be able to parse no flag" in {
+      val parser = Parser("test", "test")
+        .addFlag("flag1", 'f',"flag1")
+      val result = parser.parseArgs(Array[String]())
+      result.get[Boolean]("flag1") shouldBe false
+    }
+
     "be able to handle single subparser" in {
       val parser = Parser("test", "test")
         .addPositional("pos1", identity[String])
@@ -80,6 +87,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
       result.toList shouldBe List(
         "first" -> ResultValue("positional"),
         "flag" -> ResultValue(true),
+        "help" -> ResultValue(false),
         "option" -> ResultValue("number"),
         "optional" -> ResultValue("optional"),
       )
@@ -90,6 +98,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         .addOptional("option2",'c', "option2", identity[String] ,Some("other"))
       val result = parser.parseArgs(Array("-c","ttt","-o","ssss"))
       result.toList shouldBe List(
+        "help" -> ResultValue(false),
         "option1" -> ResultValue("ssss"),
         "option2" -> ResultValue("ttt")
       )
@@ -131,6 +140,7 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         "bp" -> ResultValue("positional"),
         "con" -> ResultValue("cparam"),
         "end" -> ResultValue("endings"),
+        "help" -> ResultValue(false),
         "ident" -> ResultValue("unique"),
         "lin" -> ResultValue("lparam"),
         "out" -> ResultValue("oparam"),

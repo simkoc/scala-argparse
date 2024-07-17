@@ -18,6 +18,15 @@ class OptionalArgument[T] protected (
 
   override def parse(args: Iterable[String])(
       implicit result: ParsingResult): Iterable[String] = {
+    if (result.getOptional[T](name).isEmpty) {
+      // and we have not encountered the flag before
+      default match {
+        case Some(default) =>
+          // we add the default value if it exists
+          result.addResult(name, new ResultValue[T](default))
+        case None =>
+      }
+    }
     if (args.nonEmpty) {
       // if we encounter the proper flag
       if (args.head == shortFlag || args.head == longFlag) {
@@ -27,15 +36,6 @@ class OptionalArgument[T] protected (
         args.tail.tail
       } else {
         // if we do not encounter the flag
-        if (result.getOptional[T](name).isEmpty) {
-          // and we have not encountered the flag before
-          default match {
-            case Some(default) =>
-              // we add the default value if it exists
-              result.addResult(name, new ResultValue[T](default))
-            case None =>
-          }
-        }
         // do not reduce the command line arguments
         args
       }
