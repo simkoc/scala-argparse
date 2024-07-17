@@ -1,10 +1,15 @@
 import xerial.sbt.Sonatype.sonatype01
 name :=  "scala argparse"
-scalaVersion := "2.13.3"
 organization := "de.halcony"
 ThisBuild / description := "A re-imagined implementation of the handy python-argparse functionality for scala"
 Global / onChangedBuildSource := ReloadOnSourceChanges
 enablePlugins(JavaAppPackaging)
+lazy val scala213 = "2.13.3"
+lazy val scala212 = "2.12.18"
+
+scalaVersion := scala213
+
+crossScalaVersions := List(scala213, scala212)
 
 libraryDependencies ++= Seq(
   "org.scalatest"   %% "scalatest" % "3.0.8" % Test
@@ -51,8 +56,8 @@ scalacOptions ++= Seq(
   "-Ywarn-unused:locals",              // Warn if a local definition is unused.
   "-Ywarn-unused:params",              // Warn if a value parameter is unused.
   "-Ywarn-unused:patvars",             // Warn if a variable bound in a pattern is unused.
-  "-Ywarn-unused:privates"           // Warn if a private member is unused.
-  // "-Ywarn-value-discard"               // Warn when non-Unit expression results are unused.
+  "-Ywarn-unused:privates",            // Warn if a private member is unused.
+  "-Ywarn-value-discard"               // Warn when non-Unit expression results are unused.
 )
 
 compile / javacOptions ++= Seq("-Xlint:all", "-Xlint:-cast", "-g")

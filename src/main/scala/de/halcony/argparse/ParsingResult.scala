@@ -11,7 +11,7 @@ class ParsingResult {
     collection.mutable.Map()
 
   private[argparse] def addResult[T <: Result](name: String, value: T): Unit = {
-    results.addOne((name, value))
+    results += (name -> value)
   }
 
   private[argparse] def toList: List[(String, Result)] =

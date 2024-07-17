@@ -42,7 +42,7 @@ case class Parser(override val name: String,
     */
   @nowarn
   def addDefault[T](name: String, value: T): Parser = {
-    defaults.addOne(DefaultArgument[T](name, value))
+    defaults.append(DefaultArgument[T](name, value))
     this
   }
 
@@ -79,7 +79,7 @@ case class Parser(override val name: String,
   private val flags: collection.mutable.ListBuffer[FlagArgument] =
     new ListBuffer[FlagArgument]
 
-  flags.addOne(HelpFlag)
+  flags.append(HelpFlag)
 
   /** add a flag
     *
@@ -93,7 +93,7 @@ case class Parser(override val name: String,
               short: Char,
               long: String,
               description: String = ""): Parser = {
-    flags.addOne(FlagArgument(name, short, long, description))
+    flags.append(FlagArgument(name, short, long, description))
     this
   }
 
@@ -118,7 +118,7 @@ case class Parser(override val name: String,
       process: String => T,
       default: Option[T] = None,
       description: String = "")(implicit tag: ClassTag[T]): Parser = {
-    optionals.addOne(
+    optionals.append(
       OptionalArgument[T](name, short, long, process, default, description)
     )
     this
@@ -128,7 +128,7 @@ case class Parser(override val name: String,
     new ListBuffer[Parser]
 
   def addSubparser(parser: Parser): Parser = {
-    subparsers.addOne(parser.setParent(this))
+    subparsers.append(parser.setParent(this))
     this
   }
 
