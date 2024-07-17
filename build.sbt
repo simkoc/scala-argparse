@@ -4,7 +4,7 @@ organization := "de.halcony"
 ThisBuild / description := "A re-imagined implementation of the handy python-argparse functionality for scala"
 Global / onChangedBuildSource := ReloadOnSourceChanges
 enablePlugins(JavaAppPackaging)
-lazy val scala213 = "2.13.3"
+lazy val scala213 = "2.13.14"
 lazy val scala212 = "2.12.18"
 
 scalaVersion := scala213
