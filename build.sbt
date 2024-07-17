@@ -1,3 +1,4 @@
+import xerial.sbt.Sonatype.sonatype01
 name :=  "scala argparse"
 scalaVersion := "2.13.3"
 organization := "de.halcony"
@@ -61,6 +62,7 @@ testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 checkstyleConfigLocation := CheckstyleConfigLocation.File("config/checkstyle/google_checks.xml")
 checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Info)
 
+ThisBuild / sonatypeCredentialHost := sonatype01
 // this is required for sonatype sync requirements
 sonatypeProfileName := "de.halcony"
 // this is required for sonatype sync requirements
