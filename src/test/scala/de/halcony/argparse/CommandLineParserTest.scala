@@ -103,6 +103,14 @@ class CommandLineParserTest  extends WordSpec with Matchers {
         "option2" -> ResultValue("ttt")
       )
     }
+    "be able to parse multiple positionals" in {
+      val parser : Parser = Parser("test","test")
+        .addPositional("first",identity[String])
+        .addPositional("second",identity[String])
+      val pargs = parser.parseArgs(Array("first","second"))
+      pargs.get[String]("first") shouldBe "first"
+      pargs.get[String]("second") shouldBe "second"
+    }
     "be able to ignore order of optional parameters in more complex context" in {
       val mainParser: Parser = de.halcony.argparse
         .Parser(

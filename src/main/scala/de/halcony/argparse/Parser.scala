@@ -147,6 +147,7 @@ case class Parser(override val name: String,
     }
   }
 
+  @throws[ParsingException]
   def parseArgs(
       args: Iterable[String])(implicit parsingResult: ParsingResult =
                                 new ParsingResult()): ParsingResult = {
@@ -156,10 +157,10 @@ case class Parser(override val name: String,
       defaults.foreach(arg => arg.parse(current))
       //2nd process the positional
       positionals.foreach { positional =>
-        current = positional.parse(args)
+        current = positional.parse(current)
       }
       if (args.size - positionals.length != current.size) {
-        throw new ParsingException(s"there weren't enough positionals provided",
+        throw new ParsingException(s"there weren't enough positional arguments provided, the last ${args.size - positionals.length} are missing",
                                    help())
       }
       var count = current.size
