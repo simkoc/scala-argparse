@@ -2,27 +2,33 @@ package de.halcony.argparse.example
 
 import de.halcony.argparse.{Parser, ParsingException, ParsingResult}
 
+import scala.annotation.nowarn
+
 object ExampleParser {
 
   val parser: Parser =
     Parser("Example Parser", "example parser to show and test functionality")
       .addFlag("stop",
-               "s",
+               's',
                "stop",
                "halts everything and terminates the program immediately")
       .addOptional("message",
-                   "m",
+                   'm',
                    "message",
-                   None,
-                   "the message displayed if the program is stopped via flag")
+                   identity[String],
+                   description =
+                     "the message displayed if the program is stopped via flag")
       .addSubparser {
         Parser("first", "the first subparser branch")
-          .addPositional("positional", "a positional that has to be provided")
-          .addFlag("flag", "f", "flag", "a flag that can be set")
+          .addPositional("positional",
+                         identity[String],
+                         "a positional that has to be provided")
+          .addFlag("flag", 'f', "flag", "a flag that can be set")
           .addOptional("optional",
-                       "o",
+                       'o',
                        "optional",
-                       Some("default"),
+                       identity[String],
+                       Option("default"),
                        "an optional parameter")
           .addDefault[ParsingResult => Unit]("func", first)
       }
@@ -33,27 +39,31 @@ object ExampleParser {
 
   def first(pargs: ParsingResult): Unit = {
     println("running first")
-    println(pargs.toMap.foreach(pair => println(s"${pair._1} -> ${pair._2}")))
+    println(pargs.get[String]("positional"))
+    println(pargs.getFLag("flag"))
+    println(pargs.getOptional[String]("optional"))
+    println(pargs.get[String]("optional"))
   }
 
-  def second(pargs: ParsingResult): Unit = {
+  def second(@nowarn pargs: ParsingResult): Unit = {
     println("running second")
-    println(pargs.toMap.foreach(pair => println(s"${pair._1} -> ${pair._2}")))
   }
 
   def main(argv: Array[String]): Unit = {
     try {
       println(argv.toList)
-      val pargs: ParsingResult = parser.parse(argv)
-      if (pargs.getValue[Boolean]("stop")) {
+      val pargs: ParsingResult = parser.parseArgs(argv)
+      if (pargs.getFLag("stop")) {
         println(
           "stop message:" + pargs
-            .getValueOrElse[String]("message", "No stop message provided"))
+            .getOptionalOrElse[String]("message", "No stop message provided"))
         scala.sys.exit(0)
       }
-      pargs.getValue[ParsingResult => Unit]("func")(pargs)
+      val func = pargs.get[ParsingResult => Unit]("func")
+      func(pargs)
     } catch {
-      case _: ParsingException =>
+      case x: ParsingException =>
+        println(x.getContextHelp)
     }
   }
 }
