@@ -166,7 +166,9 @@ case class Parser(override val name: String,
       }
       var count = current.size
       //3rd process the optional and flags
-      do {
+      var first = true
+      while(first || (current.size < count && current.nonEmpty)) {
+        first = false
         count = current.size
         optionals.foreach { optional =>
           current = optional.parse(current)
@@ -174,7 +176,7 @@ case class Parser(override val name: String,
         flags.foreach { flag =>
           current = flag.parse(current)
         }
-      } while (current.size < count && current.nonEmpty)
+      }
       //5th process the subparsers
       if (subparsers.nonEmpty && current.isEmpty) {
         throw new ParsingException(
