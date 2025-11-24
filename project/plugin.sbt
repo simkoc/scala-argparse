@@ -1,10 +1,14 @@
-dependencyOverrides += "com.puppycrawl.tools" % "checkstyle" % "7.3"
-addSbtPlugin("com.etsy" % "sbt-checkstyle-plugin" % "3.1.1")
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
+dependencyOverrides += "com.puppycrawl.tools" % "checkstyle" % "12.1.2"
+addSbtPlugin("com.etsy"     % "sbt-checkstyle-plugin" % "3.1.1")
+addSbtPlugin("com.geirsson" % "sbt-scalafmt"          % "1.5.1")
+// the release and publish chain
+addSbtPlugin("com.github.gseitz" % "sbt-release"  % "1.0.6")
+addSbtPlugin("com.github.sbt"    % "sbt-pgp"      % "2.3.1")
+//addSbtPlugin("org.xerial.sbt"    % "sbt-sonatype" % "3.12.2")
+
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.5")
-addSbtPlugin("com.simplytyped" % "sbt-antlr4" % "0.8.2")
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.8.0")
-addSbtPlugin("com.github.sbt" % "sbt-findbugs" % "2.0.0")
-addSbtPlugin("com.geirsson" % "sbt-scalafmt" % "1.5.1")
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.21")
-addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
+addSbtPlugin("com.simplytyped"  % "sbt-antlr4"          % "0.8.2")
+addSbtPlugin("com.eed3si9n"     % "sbt-buildinfo"       % "0.8.0")
+addSbtPlugin("com.github.sbt"   % "sbt-findbugs"        % "2.0.0")
+
+
