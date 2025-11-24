@@ -53,7 +53,7 @@ object ExampleParser {
 
   def main(argv: Array[String]): Unit = {
     try {
-      println(argv.toList)
+      println("Argument List: " + argv.toList.mkString(","))
       val pargs: ParsingResult = parser.parseArgs(argv)
       if (pargs.getFLag("stop")) {
         println(

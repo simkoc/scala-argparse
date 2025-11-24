@@ -1,13 +1,8 @@
 package de.halcony.argparse
 
-import de.halcony.argparse.parsing.{Result, ResultValue}
-
-import org.scalatest._
-import flatspec._
-import matchers._
-import org.scalatest.matchers.should.Matchers.shouldBe
-
-import scala.collection.immutable.HashMap
+import de.halcony.argparse.parsing.ResultValue
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 class CommandLineParserTest  extends AnyFlatSpec with should.Matchers {
 

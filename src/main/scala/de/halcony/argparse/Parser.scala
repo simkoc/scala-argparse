@@ -152,28 +152,32 @@ case class Parser(override val name: String,
       args: Iterable[String])(implicit parsingResult: ParsingResult =
                                 new ParsingResult()): ParsingResult = {
     try {
+
       var current = args
       //1st process the default
       defaults.foreach(arg => arg.parse(current))
       //2nd process the positional
       positionals.foreach { positional =>
+        HelpFlag.parse(current)
         current = positional.parse(current)
       }
       if (args.size - positionals.length != current.size) {
         throw new ParsingException(
-          s"there weren't enough positional arguments provided, the last ${args.size - positionals.length} are missing",
+          s"there weren't enough positional arguments provided, the last ${positionals.length - args.size} are missing",
           help())
       }
       var count = current.size
       //3rd process the optional and flags
       var first = true
-      while(first || (current.size < count && current.nonEmpty)) {
+      while (first || (current.size < count && current.nonEmpty)) {
         first = false
         count = current.size
         optionals.foreach { optional =>
+          HelpFlag.parse(current)
           current = optional.parse(current)
         }
         flags.foreach { flag =>
+          HelpFlag.parse(current)
           current = flag.parse(current)
         }
       }
@@ -184,6 +188,7 @@ case class Parser(override val name: String,
           help())
       }
       subparsers.foreach { subparser =>
+        HelpFlag.parse(current)
         current = subparser.parse(current)
       }
       if (current.nonEmpty) {
@@ -240,17 +245,29 @@ case class Parser(override val name: String,
     msg ++= s"usage: ${createCommandString(None)}".trim()
     msg ++= "\n\n"
     msg ++= description + "\n\n"
-    msg ++= (positionals ++ optionals ++ flags)
+    msg ++= positionals
       .map(x => s"          ${x.help()}")
-      .mkString("\n\n")
-    if ((positionals ++ optionals ++ flags).nonEmpty) {
+      .mkString("\n")
+    if (positionals.nonEmpty) {
+      msg ++= "\n\n"
+    }
+    msg ++= optionals
+      .map(x => s"          ${x.help()}")
+      .mkString("\n")
+    if (optionals.nonEmpty) {
+      msg ++= "\n\n"
+    }
+    msg ++= flags
+      .map(x => s"          ${x.help()}")
+      .mkString("\n")
+    if (flags.nonEmpty) {
       msg ++= "\n\n"
     }
     msg ++= subparsers
       .map(sp => s"          ${sp.name} ${sp.description}")
-      .mkString("\n\n")
+      .mkString("\n")
     if (subparsers.nonEmpty) {
-      msg ++= "\n\n"
+      msg ++= "\n"
     }
     msg ++= "\n"
     msg.toString
